@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+  
 jobs:
   count_commits_and_tasks:
     runs-on: ubuntu-latest
