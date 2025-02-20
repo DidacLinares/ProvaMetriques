@@ -48,20 +48,9 @@ jobs:
           
           echo "$OUTPUT_JSON" > metrics.json
           cat metrics.json
-
-      - name: Obtenir id del projecte associat
-        id: get_project_id
-        run: |
-          REPO="${{ github.repository }}"
-          PROJECTS_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/$REPO/projects")
-          
-          PROJECT_ID=$(echo "$PROJECTS_JSON" | jq -r '.[0].id')
-          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
-
       - name: Obtenir tasques dels usuaris
         run: |
-          PROJECT_ID=${{ env.PROJECT_ID }}
+          PROJECT_ID=${{ secrets.PROJECT_ID }}
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/projects/$PROJECT_ID/cards")
 
