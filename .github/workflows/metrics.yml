@@ -1,0 +1,94 @@
+name: Contar commits y tareas
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  count_commits_and_tasks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtenir Commits dels usuaris
+        id: get_contributors
+        run: |
+          REPO="${{ github.repository }}"
+          echo "Repositorio: $REPO"
+
+          CONTRIBUTORS_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/$REPO/contributors")
+
+          TOTAL_COMMITS=0
+          declare -A commits_by_user
+
+          for row in $(echo "${CONTRIBUTORS_JSON}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+
+            USER=$(_jq '.login')
+            COMMITS=$(_jq '.contributions')
+
+          if [[ "$USER" != "github-actions[bot]" ]]; then
+              commits_by_user["$USER"]=$COMMITS
+              TOTAL_COMMITS=$((TOTAL_COMMITS + COMMITS))
+            fi
+          done
+
+          OUTPUT_JSON="{\"Commits\": {"
+
+          for USER in "${!commits_by_user[@]}"; do
+            OUTPUT_JSON+="\"$USER\": ${commits_by_user[$USER]},"
+          done
+
+          OUTPUT_JSON=${OUTPUT_JSON%,}
+          OUTPUT_JSON+="}, \"Total\": $TOTAL_COMMITS, \"Tasks\": {}, \"TasksTotal\": 0 }"
+          
+          echo "$OUTPUT_JSON" > metrics.json
+          cat metrics.json
+
+      - name: Obtenir id del projecte associat
+        id: get_project_id
+        run: |
+          REPO="${{ github.repository }}"
+          PROJECTS_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/$REPO/projects")
+          
+          PROJECT_ID=$(echo "$PROJECTS_JSON" | jq -r '.[0].id')
+          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+
+      - name: Obtenir tasques dels usuaris
+        run: |
+          PROJECT_ID=${{ env.PROJECT_ID }}
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/projects/$PROJECT_ID/cards")
+
+          TASKS_JSON="{"
+          TOTAL_TASKS=0
+
+          while IFS= read -r TASK; do
+            ASSIGNEE=$(echo "$TASK" | jq -r '.assignee.login')
+            if [ "$ASSIGNEE" != "null" ]; then
+              TASKS_JSON+="\"$ASSIGNEE\": $((${TASKS_JSON[$ASSIGNEE]:-0} + 1)),"
+              TOTAL_TASKS=$((TOTAL_TASKS + 1))
+            fi
+          done <<< "$RESPONSE"
+
+          TASKS_JSON=${TASKS_JSON%,}
+          TASKS_JSON+=",\"Total\": $TOTAL_TASKS }"
+
+          OUTPUT_JSON=$(<metrics.json)
+          OUTPUT_JSON=${OUTPUT_JSON//\"Tasks\": {} /\"Tasks\": $TASKS_JSON }
+
+          echo "$OUTPUT_JSON" > metrics.json
+
+      - name: Committing results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add metrics.json
+          git commit -m "Actualitzar metrics.json" || exit 0
+          git push
