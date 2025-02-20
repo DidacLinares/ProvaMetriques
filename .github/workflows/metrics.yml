@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Obtenir Commits dels usuaris
         id: get_contributors
         run: |
