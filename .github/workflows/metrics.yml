@@ -51,7 +51,7 @@ jobs:
           for USER in "${!commits_by_user[@]}"; do
             OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --arg user "$USER" --argjson commits "${commits_by_user[$USER]}" '.Commits[$user] = $commits')
           done
-          OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --arg user "Total" --argjson commits "$TOTAL_COMMITS")
+          OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --argjson total_commits "$TOTAL_COMMITS" '.Commits["Total"] = $total_commits')
 
           echo "$OUTPUT_JSON" | jq . > metrics.json
           cat metrics.json
