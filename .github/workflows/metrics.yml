@@ -33,6 +33,7 @@ jobs:
             _jq() {
               echo ${row} | base64 --decode | jq -r ${1}
             }
+          echo "${CONTRIBUTORS_JSON}"
 
             USER=$(_jq '.login')
             COMMITS=$(_jq '.contributions')
