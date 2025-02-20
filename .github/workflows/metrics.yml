@@ -48,15 +48,20 @@ jobs:
           
           echo "$OUTPUT_JSON" > metrics.json
           cat metrics.json
-      - name: Obtenir tasques dels usuaris
+      - name: Obtenir tasques projecte
         run: |
-          PROJECT_ID=${{ secrets.PROJECT_ID }}
+          PROJECT_ID=${{ secrets.PROJECT_ID }}  # Acceder a la variable de entorno
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/projects/$PROJECT_ID/cards")
-
+          
+          # Imprimir el contenido de RESPONSE para depuración
+          echo "$RESPONSE"
+      
+          # Inicializar el objeto de tareas
           TASKS_JSON="{"
           TOTAL_TASKS=0
-
+      
+          # Contar tareas asignadas
           while IFS= read -r TASK; do
             ASSIGNEE=$(echo "$TASK" | jq -r '.assignee.login')
             if [ "$ASSIGNEE" != "null" ]; then
@@ -64,13 +69,16 @@ jobs:
               TOTAL_TASKS=$((TOTAL_TASKS + 1))
             fi
           done <<< "$RESPONSE"
-
+      
+          # Eliminar la última coma y cerrar el JSON de tareas
           TASKS_JSON=${TASKS_JSON%,}
           TASKS_JSON+=",\"Total\": $TOTAL_TASKS }"
-
+      
+          # Leer el JSON de commits y añadir las tareas
           OUTPUT_JSON=$(<metrics.json)
           OUTPUT_JSON=${OUTPUT_JSON//\"Tasks\": {} /\"Tasks\": $TASKS_JSON }
-
+      
+          # Guardar el JSON final
           echo "$OUTPUT_JSON" > metrics.json
 
       - name: Committing results
