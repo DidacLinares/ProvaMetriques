@@ -37,22 +37,24 @@ jobs:
             USER=$(_jq '.login')
             COMMITS=$(_jq '.contributions')
 
-          if [[ "$USER" != "github-actions[bot]" ]]; then
-              commits_by_user["$USER"]=$COMMITS
-              TOTAL_COMMITS=$((TOTAL_COMMITS + COMMITS))
+            if [[ "$USER" != "github-actions[bot]" ]]; then
+                commits_by_user["$USER"]=$COMMITS
+                TOTAL_COMMITS=$((TOTAL_COMMITS + COMMITS))
             fi
           done
 
-          OUTPUT_JSON="{\"Commits\": {"
+          OUTPUT_JSON=$(jq -n \
+            --argjson total_commits "$TOTAL_COMMITS" \
+            '{
+              Commits: {},
+              Total: $total_commits
+            }')
 
           for USER in "${!commits_by_user[@]}"; do
-            OUTPUT_JSON+="\"$USER\": ${commits_by_user[$USER]},"
+            OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --arg user "$USER" --argjson commits "${commits_by_user[$USER]}" '.Commits[$user] = $commits')
           done
 
-          OUTPUT_JSON=${OUTPUT_JSON%,}
-          OUTPUT_JSON+="}, \"Total\": $TOTAL_COMMITS, \"Tasks\": {}, \"TasksTotal\": 0 }"
-          
-          echo "$OUTPUT_JSON" > metrics.json
+          echo "$OUTPUT_JSON" | jq . > metrics.json
           cat metrics.json
     
       - name: Committing results
