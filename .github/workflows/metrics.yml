@@ -61,7 +61,7 @@ jobs:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           REPO: ${{ github.repository }}
         run: |
-         PROJECT_NODE_ID="repository:${{ github.repository }}:project:${PROJECT_ID}"
+          PROJECT_NODE_ID="github.com/$OWNER/projects/$PROJECT_ID"
 
           RESPONSE=$(curl -s -X POST -H "Authorization: bearer $GH_TOKEN" -H "Content-Type: application/json" \
           -d '{
