@@ -55,54 +55,6 @@ jobs:
 
           echo "$OUTPUT_JSON" | jq . > metrics.json
           cat metrics.json
-      - name: Obtenir tasques assignades dels usuaris
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          REPO: ${{ github.repository }}
-        run: |
-          PROJECT_NODE_ID="github.com/$OWNER/projects/$PROJECT_ID"
-
-          RESPONSE=$(curl -s -X POST -H "Authorization: bearer $GH_TOKEN" -H "Content-Type: application/json" \
-          -d '{
-            "query": "query {
-              node(id: \"'"$PROJECT_NODE_ID"'\") {
-                ... on ProjectV2 {
-                  items(first: 100) {
-                    nodes {
-                      ... on DraftIssue {
-                        id
-                        title
-                        assignees(first: 10) {
-                          nodes {
-                            login
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }"
-          }' https://api.github.com/graphql)
-
-          echo "$RESPONSE" | jq '.' > response.json
-
-          if [ ! -f metrics.json ]; then
-            echo '{"Commits": {}, "Tasks": {}}' > metrics.json
-          fi
-
-          cat response.json | jq -r '
-            .data.node.items.nodes[] |
-            select(.assignees.nodes != null) |
-            {assignees: [.assignees.nodes[].login]}
-          ' | jq -s '
-            reduce .[] as $task ({}; 
-              reduce $task.assignees[] as $user (.; 
-                .[$user] = (.[ $user ] // 0) + 1)
-            ) | .Total = (reduce .[] as $count (0; . + $count))' > tasks.json
-
-          jq '.Tasks = input' metrics.json tasks.json > temp.json && mv temp.json metrics.json
       - name: Committing results
         run: |
           git config --global user.name "github-actions[bot]"
