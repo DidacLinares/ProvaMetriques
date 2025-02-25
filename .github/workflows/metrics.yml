@@ -59,21 +59,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          REPO: ${{ github.repository }}
         run: |
+         PROJECT_NODE_ID="repository:${{ github.repository }}:project:${PROJECT_ID}"
+
           RESPONSE=$(curl -s -X POST -H "Authorization: bearer $GH_TOKEN" -H "Content-Type: application/json" \
           -d '{
             "query": "query {
-              node(id: \"'"$PROJECT_ID"'\") {
+              node(id: \"'"$PROJECT_NODE_ID"'\") {
                 ... on ProjectV2 {
                   items(first: 100) {
                     nodes {
-                      id
-                      assignees: fieldValueByName(name: \"Assignees\") {
-                        ... on ProjectV2ItemFieldUserValue {
-                          users(first: 10) {
-                            nodes {
-                              login
-                            }
+                      ... on DraftIssue {
+                        id
+                        title
+                        assignees(first: 10) {
+                          nodes {
+                            login
                           }
                         }
                       }
@@ -92,8 +94,8 @@ jobs:
 
           cat response.json | jq -r '
             .data.node.items.nodes[] |
-            select(.assignees.users.nodes != null) |
-            {assignees: [.assignees.users.nodes[].login]}
+            select(.assignees.nodes != null) |
+            {assignees: [.assignees.nodes[].login]}
           ' | jq -s '
             reduce .[] as $task ({}; 
               reduce $task.assignees[] as $user (.; 
