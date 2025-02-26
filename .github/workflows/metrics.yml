@@ -9,7 +9,7 @@ permissions:
   contents: write
   
 jobs:
-  count_commits_and_tasks:
+  count_commits:
     runs-on: ubuntu-latest
 
     steps:
