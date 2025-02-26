@@ -1,4 +1,4 @@
-name: Commits i tasks
+name: Commits
 on:
   push:
     branches:
@@ -20,7 +20,6 @@ jobs:
         id: get_contributors
         run: |
           REPO="${{ github.repository }}"
-          echo "Repositorio: $REPO"
 
           CONTRIBUTORS_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/$REPO/contributors")
@@ -32,7 +31,6 @@ jobs:
             _jq() {
               echo ${row} | base64 --decode | jq -r ${1}
             }
-          echo "${CONTRIBUTORS_JSON}"
 
             USER=$(_jq '.login')
             COMMITS=$(_jq '.contributions')
