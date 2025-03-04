@@ -1,63 +1,34 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commits</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             padding: 20px;
             background-color: #f4f4f4;
-        }
-        h1 {
             text-align: center;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+        .gauge-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
         }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
+        .gauge-item {
+            width: 300px;
             text-align: center;
-        }
-        th {
-            background-color: #000089;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        tr:hover {
-            background-color: #ddd;
-        }
-        .last-row {
-            background-color: #d3d3d3;
-            color: black; 
-            font-weight: bold; 
         }
     </style>
 </head>
 <body>
-
     <h1>Commits</h1>
+    <div class="gauge-container" id="gaugeContainer"></div>
     
-    <table id="commitsTable">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Nombre de Commits</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-
     <script>
         fetch('metrics.json')
             .then(response => {
@@ -67,32 +38,70 @@
                 return response.json();
             })
             .then(data => {
-                const tableBody = document.querySelector('#commitsTable tbody');
-                const users = Object.entries(data.Commits);
-                const totalUsers = users.length; 
-
-                users.forEach(([user, commits], index) => {
-                    const row = document.createElement('tr');
-                    const userCell = document.createElement('td');
-                    const commitsCell = document.createElement('td');
-
-                    userCell.textContent = user;
-                    commitsCell.textContent = commits;
-
-                    row.appendChild(userCell);
-                    row.appendChild(commitsCell);
+                const container = document.getElementById('gaugeContainer');
+                const users = Object.entries(data.Commits).filter(([user]) => user.toLowerCase() !== 'total');
+                const totalCommits = users.reduce((sum, [, commits]) => sum + commits, 0);
+                
+                users.forEach(([user, commits]) => {
+                    const percentage = totalCommits > 0 ? (commits / totalCommits) : 0;
                     
-                    if (index === totalUsers - 1) {
-                        row.classList.add('last-row');
-                    }
-
-                    tableBody.appendChild(row);
+                    const gaugeItem = document.createElement('div');
+                    gaugeItem.classList.add('gauge-item');
+                    
+                    const gaugeDiv = document.createElement('div');
+                    gaugeDiv.style.width = '250px';
+                    gaugeDiv.style.height = '200px';
+                    gaugeItem.appendChild(gaugeDiv);
+                    
+                    container.appendChild(gaugeItem);
+                    
+                    const chart = echarts.init(gaugeDiv);
+                    const option = {
+                        series: [{
+                            type: 'gauge',
+                            startAngle: 180,
+                            endAngle: 0,
+                            min: 0,
+                            max: 1,
+                            axisLine: {
+                                lineStyle: {
+                                    width: 15,
+                                    color: [[0, 'red'], [0.4, 'red'], [0.6, 'green'],[1,'red']]
+                                }
+                            },
+                            pointer: {
+                                width: 5,
+                                length: '70%',
+                                itemStyle: { color: 'black' }
+                            },
+                            axisTick: { show: false },
+                            splitLine: { show: false },
+                            axisLabel: {
+                                show: true,
+                                distance: -40,
+                                fontSize: 14,
+                                color: '#000',
+                                fontWeight: 'bold',
+                                formatter: function (value) {
+                                    let labels = { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" };
+                                    return labels[value] || "";
+                                }
+                            },
+                            detail: {
+                                formatter: `${user} (${(percentage * 100).toFixed(2)}%)`,
+                                fontSize: 18,
+                                fontWeight: 'bold',
+                                color: '#000'
+                            },
+                            data: [{ value: percentage.toFixed(3) }]
+                        }]
+                    };
+                    chart.setOption(option);
                 });
             })
             .catch(error => {
                 console.error('Error:', error);
             });
     </script>
-
 </body>
 </html>
