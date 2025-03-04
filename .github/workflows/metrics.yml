@@ -19,40 +19,7 @@ jobs:
       - name: Obtenir Commits dels usuaris
         id: get_contributors
         run: |
-          REPO="${{ github.repository }}"
-
-          CONTRIBUTORS_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/$REPO/contributors")
-
-          TOTAL_COMMITS=0
-          declare -A commits_by_user
-
-          for row in $(echo "${CONTRIBUTORS_JSON}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo ${row} | base64 --decode | jq -r ${1}
-            }
-
-            USER=$(_jq '.login')
-            COMMITS=$(_jq '.contributions')
-
-            if [[ "$USER" != "github-actions[bot]" ]]; then
-                commits_by_user["$USER"]=$COMMITS
-                TOTAL_COMMITS=$((TOTAL_COMMITS + COMMITS))
-            fi
-          done
-
-          OUTPUT_JSON=$(jq -n \
-            '{
-              Commits: {},
-            }')
-
-          for USER in "${!commits_by_user[@]}"; do
-            OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --arg user "$USER" --argjson commits "${commits_by_user[$USER]}" '.Commits[$user] = $commits')
-          done
-          OUTPUT_JSON=$(echo "$OUTPUT_JSON" | jq --argjson total_commits "$TOTAL_COMMITS" '.Commits["Total"] = $total_commits')
-
-          echo "$OUTPUT_JSON" | jq . > metrics.json
-          cat metrics.json
+          python metrics.py
       - name: Committing results
         run: |
           git config --global user.name "github-actions[bot]"
