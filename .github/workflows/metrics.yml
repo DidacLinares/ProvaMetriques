@@ -20,6 +20,9 @@ jobs:
         id: get_contributors
         run: |
           python metrics.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Committing results
         run: |
           git config --global user.name "github-actions[bot]"
