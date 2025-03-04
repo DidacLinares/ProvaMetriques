@@ -23,10 +23,19 @@
             width: 300px;
             text-align: center;
         }
+        a.commit-link {
+            text-decoration: none;  
+            color: inherit;         
+        }
+
+        a.commit-link:hover {
+            color: #1800f3;       
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
-    <h1>Commits</h1>
+    <h1><a href="old.html" class="commit-link">Commits</a></h1>
     <div class="gauge-container" id="gaugeContainer"></div>
     
     <script>
