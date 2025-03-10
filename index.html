@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commits</title>
+    <title>Mètriques</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <style>
         body {
@@ -32,12 +32,22 @@
             color: #1800f3;       
             text-decoration: underline; 
         }
+        #radarChart {
+            width: 600px;
+            height: 400px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
     <h1><a href="old.html" class="commit-link">Commits</a></h1>
     <div class="gauge-container" id="gaugeContainer"></div>
-    
+    <div id="radarChart"></div>
+
     <script>
         fetch('metrics.json')
             .then(response => {
@@ -48,9 +58,10 @@
             })
             .then(data => {
                 const container = document.getElementById('gaugeContainer');
+                const radarContainer = document.getElementById('radarChart');
                 const users = Object.entries(data.Commits).filter(([user]) => user.toLowerCase() !== 'total');
                 const totalCommits = users.reduce((sum, [, commits]) => sum + commits, 0);
-                
+
                 users.forEach(([user, commits]) => {
                     const percentage = totalCommits > 0 ? (commits / totalCommits) : 0;
                     
@@ -107,6 +118,31 @@
                     };
                     chart.setOption(option);
                 });
+
+                const radarChart = echarts.init(radarContainer);
+                const radarOption = {
+                    title: {
+                        text: 'Commits',
+                        left: 'center'
+                    },
+                    tooltip: {},
+                    radar: {
+                        indicator: users.map(([user, commits]) => ({ name: user, max: totalCommits })),
+                        shape: 'polygon'
+                    },
+                    series: [{
+                        name: 'Commits',
+                        type: 'radar',
+                        data: [
+                            {
+                                value: users.map(([, commits]) => commits),
+                                name: 'Commits per Usuari',
+                                areaStyle: { color: 'rgba(0, 128, 255, 0.3)' }
+                            }
+                        ]
+                    }]
+                };
+                radarChart.setOption(radarOption);
             })
             .catch(error => {
                 console.error('Error:', error);
