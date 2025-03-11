@@ -38,22 +38,23 @@ response_issues = requests.get(issues_url, headers=HEADERS)
 if response_issues.status_code == 200:
     issues = response_issues.json()
     issues_by_user = {}
-    total_issues = len(issues)
+    total_issues = 0
     non_assigned_issues = 0
     
     for issue in issues:
         if 'assignees' in issue and issue['assignees']:
+            total_issues += 1
             assignees = issue['assignees']
             for assignee in assignees:
                 assignee_login = assignee['login']
                 issues_by_user[assignee_login] = issues_by_user.get(assignee_login, 0) + 1
         else:
             non_assigned_issues += 1
+            total_issues += 1
     
     issues_data = issues_by_user
-    issues_data["Total"] = total_issues
     issues_data["Non-Assigned"] = non_assigned_issues
-    
+    issues_data["Total"] = total_issues
     commits_data["Issues"] = issues_data
 else:
     print(f"Error obtenint les issues: {response_issues.status_code}")
