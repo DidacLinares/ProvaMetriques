@@ -42,6 +42,8 @@ if response_issues.status_code == 200:
     non_assigned_issues = 0
     
     for issue in issues:
+        if 'pull_request' in issue:
+            continue
         if 'assignees' in issue and issue['assignees']:
             total_issues += 1
             assignees = issue['assignees']
