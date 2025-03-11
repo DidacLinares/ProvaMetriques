@@ -24,18 +24,21 @@
             text-align: center;
         }
         a.commit-link {
-            text-decoration: none;  
-            color: inherit;         
+            text-decoration: none;
+            color: inherit;
         }
-
         a.commit-link:hover {
-            color: #1800f3;       
-            text-decoration: underline; 
+            text-decoration: none;
         }
-        #radarChart {
+        .chart-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+        }
+        .chart-container {
             width: 600px;
             height: 400px;
-            margin: 30px auto;
             background: white;
             border-radius: 10px;
             padding: 10px;
@@ -45,104 +48,130 @@
 </head>
 <body>
     <h1><a href="old.html" class="commit-link">Commits</a></h1>
-    <div class="gauge-container" id="gaugeContainer"></div>
-    <div id="radarChart"></div>
+    <div class="gauge-container" id="gaugeCommitsContainer"></div>
+    <div class="chart-wrapper">
+        <div id="radarCommitsChart" class="chart-container"></div>
+    </div>
+    
+    <h1>Issues</h1>
+    <div class="gauge-container" id="gaugeIssuesContainer"></div>
+    <div class="chart-wrapper">
+        <div id="radarIssuesChart" class="chart-container"></div>
+    </div>
 
     <script>
         fetch('metrics.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al carregar el JSON');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                const container = document.getElementById('gaugeContainer');
-                const radarContainer = document.getElementById('radarChart');
-                const users = Object.entries(data.Commits).filter(([user]) => user.toLowerCase() !== 'total');
-                const totalCommits = users.reduce((sum, [, commits]) => sum + commits, 0);
+                function createGauges(containerId, dataObj, totalKey,type) {
+                    const container = document.getElementById(containerId);
+                    const users = Object.entries(dataObj).filter(([user]) => user.toLowerCase() !== totalKey);
+                    const total = users.reduce((sum, [, value]) => sum + value, 0);
+                    const labels = type === "commits" 
+                        ? { 0: "0", 0.2: "0.2",0.4: "0.4", 1: "1" } 
+                        : { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" };
 
-                users.forEach(([user, commits]) => {
-                    const percentage = totalCommits > 0 ? (commits / totalCommits) : 0;
+                    users.forEach(([user, value]) => {
+                        const percentage = total > 0 ? (value / total) : 0;
+                        
+                        const gaugeItem = document.createElement('div');
+                        gaugeItem.classList.add('gauge-item');
+                        
+                        const gaugeDiv = document.createElement('div');
+                        gaugeDiv.style.width = '250px';
+                        gaugeDiv.style.height = '200px';
+                        gaugeItem.appendChild(gaugeDiv);
+                        
+                        container.appendChild(gaugeItem);
+                        const isNonAssigned = user.toLowerCase() === 'non-assigned';
+                        let gaugeColor;
+                        if (type === "commits") {
+                            gaugeColor = [[0.1, 'red'],[0.2, 'orange'], [0.4, 'green'], [0.5, 'orange'], [1, 'red']];
+                        } else {
+                            gaugeColor = isNonAssigned ? [[0, 'red'], [1, 'red']] : [[0.2, 'red'], [0.4, 'orange'], [0.6, 'green'], [0.8, 'orange'], [1, 'red']];
+                        };
+                        const chart = echarts.init(gaugeDiv);
+                        const option = {
+                            series: [{
+                                type: 'gauge',
+                                startAngle: 180,
+                                endAngle: 0,
+                                min: 0,
+                                max: 1,
+                                axisLine: {
+                                    lineStyle: {
+                                        width: 15,
+                                        color: gaugeColor
+                                    }
+                                },
+                                pointer: {
+                                    width: 2,
+                                    length: '70%',
+                                    itemStyle: { color: 'black' }
+                                },
+                                axisTick: { show: false },
+                                splitLine: { show: false },
+                                axisLabel: {
+                                    show: true,
+                                    distance: -40,
+                                    fontSize: 14,
+                                    color: '#000',
+                                    fontWeight: 'bold',
+                                    formatter: function (value) {
+                                        if (isNonAssigned) {
+                                            return value === 0 || value === 1 ? value.toString() : "";
+                                        }
+                                        return labels[value] || "";
+                                    }
+                                },
+                                detail: {
+                                    formatter: `${user} (${(percentage * 100).toFixed(2)}%)`,
+                                    fontSize: 18,
+                                    fontWeight: 'bold',
+                                    color: '#000'
+                                },
+                                data: [{ value: percentage.toFixed(3) }]
+                            }]
+                        };
+                        chart.setOption(option);
+                    });
+                }
+                
+                function createRadarChart(containerId, dataObj, totalKey, title) {
+                    const container = document.getElementById(containerId);
+                    const users = Object.entries(dataObj).filter(([user]) => user.toLowerCase() !== totalKey && user.toLowerCase() !== 'non-assigned');
+                    const total = users.reduce((sum, [, value]) => sum + value, 0);
                     
-                    const gaugeItem = document.createElement('div');
-                    gaugeItem.classList.add('gauge-item');
-                    
-                    const gaugeDiv = document.createElement('div');
-                    gaugeDiv.style.width = '250px';
-                    gaugeDiv.style.height = '200px';
-                    gaugeItem.appendChild(gaugeDiv);
-                    
-                    container.appendChild(gaugeItem);
-                    
-                    const chart = echarts.init(gaugeDiv);
-                    const option = {
+                    const radarChart = echarts.init(container);
+                    const radarOption = {
+                        title: {
+                            text: title,
+                            left: 'center'
+                        },
+                        tooltip: {},
+                        radar: {
+                            indicator: users.map(([user, value]) => ({ name: user, max: total })),
+                            shape: 'polygon'
+                        },
                         series: [{
-                            type: 'gauge',
-                            startAngle: 180,
-                            endAngle: 0,
-                            min: 0,
-                            max: 1,
-                            axisLine: {
-                                lineStyle: {
-                                    width: 15,
-                                    color: [[0.2, 'red'], [0.4, 'orange'], [0.6, 'green'],[0.8, 'orange'],[1,'red']]
+                            name: title,
+                            type: 'radar',
+                            data: [
+                                {
+                                    value: users.map(([, value]) => value),
+                                    name: title,
+                                    areaStyle: { color: 'rgba(0, 128, 255, 0.3)' }
                                 }
-                            },
-                            pointer: {
-                                width: 2,
-                                length: '70%',
-                                itemStyle: { color: 'black' }
-                            },
-                            axisTick: { show: false },
-                            splitLine: { show: false },
-                            axisLabel: {
-                                show: true,
-                                distance: -40,
-                                fontSize: 14,
-                                color: '#000',
-                                fontWeight: 'bold',
-                                formatter: function (value) {
-                                    let labels = { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" };
-                                    return labels[value] || "";
-                                }
-                            },
-                            detail: {
-                                formatter: `${user} (${(percentage * 100).toFixed(2)}%)`,
-                                fontSize: 18,
-                                fontWeight: 'bold',
-                                color: '#000'
-                            },
-                            data: [{ value: percentage.toFixed(3) }]
+                            ]
                         }]
                     };
-                    chart.setOption(option);
-                });
+                    radarChart.setOption(radarOption);
+                }
 
-                const radarChart = echarts.init(radarContainer);
-                const radarOption = {
-                    title: {
-                        text: 'Commits',
-                        left: 'center'
-                    },
-                    tooltip: {},
-                    radar: {
-                        indicator: users.map(([user, commits]) => ({ name: user, max: totalCommits })),
-                        shape: 'polygon'
-                    },
-                    series: [{
-                        name: 'Commits',
-                        type: 'radar',
-                        data: [
-                            {
-                                value: users.map(([, commits]) => commits),
-                                name: 'Commits per Usuari',
-                                areaStyle: { color: 'rgba(0, 128, 255, 0.3)' }
-                            }
-                        ]
-                    }]
-                };
-                radarChart.setOption(radarOption);
+                createGauges('gaugeCommitsContainer', data.Commits, 'total',"commits");
+                createRadarChart('radarCommitsChart', data.Commits, 'total', 'Commits per Usuari');
+                createGauges('gaugeIssuesContainer', data.Issues, 'total',"issues");
+                createRadarChart('radarIssuesChart', data.Issues, 'total', 'Issues per Usuari');
             })
             .catch(error => {
                 console.error('Error:', error);
