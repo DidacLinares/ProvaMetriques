@@ -1,14 +1,14 @@
 {
     "Commits": {
-        "DidacLinares": 28,
-        "github-actions[bot]": 26,
+        "DidacLinares": 30,
+        "github-actions[bot]": 28,
         "didaclinaresUPC": 10,
-        "Total": 64
+        "Total": 68
     },
     "Issues": {
         "didaclinaresUPC": 1,
         "DidacLinares": 2,
-        "Non-Assigned": 0,
-        "Total": 3
+        "Non-Assigned": 2,
+        "Total": 5
     }
 }
