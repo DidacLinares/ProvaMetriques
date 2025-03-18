@@ -44,33 +44,50 @@
             padding: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+        .selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
-    <h1><a href="old.html" class="commit-link">Commits</a></h1>
-    <div class="gauge-container" id="gaugeCommitsContainer"></div>
-    <div class="chart-wrapper">
-        <div id="radarCommitsChart" class="chart-container"></div>
+    <h1><a href="old.html" class="commit-link" id="titleLink">Commits</a></h1>
+    
+    <div class="selector">
+        <label for="metricSelector">Seleccionar mètrica:</label>
+        <select id="metricSelector">
+            <option value="commits">Commits</option>
+            <option value="issues">Issues</option>
+        </select>
     </div>
     
-    <h1>Issues</h1>
-    <div class="gauge-container" id="gaugeIssuesContainer"></div>
+    <div class="gauge-container" id="gaugeContainer"></div>
     <div class="chart-wrapper">
-        <div id="radarIssuesChart" class="chart-container"></div>
+        <div id="radarChart" class="chart-container"></div>
     </div>
 
     <script>
         fetch('metrics.json')
             .then(response => response.json())
             .then(data => {
-                function createGauges(containerId, dataObj, totalKey,type) {
+                const container = document.getElementById('gaugeContainer');
+                const radarContainer = document.getElementById('radarChart');
+                
+                function createGauges(containerId, dataObj, totalKey, type) {
                     const container = document.getElementById(containerId);
                     const users = Object.entries(dataObj).filter(([user]) => user.toLowerCase() !== totalKey);
                     const total = users.reduce((sum, [, value]) => sum + value, 0);
                     const labels = type === "commits" 
-                        ? { 0: "0", 0.2: "0.2",0.4: "0.4", 1: "1" } 
+                        ? { 0: "0", 0.2: "0.2", 0.4: "0.4", 1: "1" } 
                         : { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" };
 
+                    container.innerHTML = '';
+                    
                     users.forEach(([user, value]) => {
                         const percentage = total > 0 ? (value / total) : 0;
                         
@@ -136,12 +153,14 @@
                         chart.setOption(option);
                     });
                 }
-                
+
                 function createRadarChart(containerId, dataObj, totalKey, title) {
                     const container = document.getElementById(containerId);
                     const users = Object.entries(dataObj).filter(([user]) => user.toLowerCase() !== totalKey && user.toLowerCase() !== 'non-assigned');
                     const total = users.reduce((sum, [, value]) => sum + value, 0);
-                    
+                    if (users.length === 2) {
+                        users.push(['', 0]);
+                    }
                     const radarChart = echarts.init(container);
                     const radarOption = {
                         title: {
@@ -168,10 +187,26 @@
                     radarChart.setOption(radarOption);
                 }
 
-                createGauges('gaugeCommitsContainer', data.Commits, 'total',"commits");
-                createRadarChart('radarCommitsChart', data.Commits, 'total', 'Commits per Usuari');
-                createGauges('gaugeIssuesContainer', data.Issues, 'total',"issues");
-                createRadarChart('radarIssuesChart', data.Issues, 'total', 'Issues per Usuari');
+                function updateCharts(metric) {
+                    const dataObj = data[metric.charAt(0).toUpperCase() + metric.slice(1)];
+                    const title = metric.charAt(0).toUpperCase() + metric.slice(1) + ' per Usuari';
+                    const titleLink = document.getElementById('titleLink');
+
+                    createGauges('gaugeContainer', dataObj, 'total', metric);
+                    createRadarChart('radarChart', dataObj, 'total', title);
+                    if (metric === 'commits') {
+                        titleLink.textContent = 'Commits';
+                    } else if (metric === 'issues') {
+                        titleLink.textContent = 'Issues';
+                    }
+                }
+
+                updateCharts('commits');
+
+                document.getElementById('metricSelector').addEventListener('change', (event) => {
+                    const selectedMetric = event.target.value;
+                    updateCharts(selectedMetric);
+                });
             })
             .catch(error => {
                 console.error('Error:', error);
