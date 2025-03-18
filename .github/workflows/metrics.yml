@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+  issues:
+    types: [opened, edited, closed]
   workflow_dispatch:
 
 permissions:
