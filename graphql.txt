@@ -1,0 +1,49 @@
+query {
+  user(login: "DidacLinares") {
+    projectsV2(first: 1) {
+      nodes {
+        title
+        items(first: 100) {
+          nodes {
+            content {
+              __typename
+              ... on DraftIssue {
+                title 
+              }
+              ... on Issue {
+                title 
+              }
+            }
+            fieldValues(first: 10) {
+              nodes {
+                ... on ProjectV2ItemFieldSingleSelectValue {
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name 
+                    }
+                  }
+                  name  
+                }
+                ... on ProjectV2ItemFieldUserValue {
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name 
+                    }
+                  }
+                  users(first: 5) {
+                    nodes {
+                      login 
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+https://docs.github.com/en/graphql/overview/explorer
