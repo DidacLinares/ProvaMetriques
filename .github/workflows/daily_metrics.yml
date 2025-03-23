@@ -27,6 +27,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout gh-pages
 
           git add docs/daily_metrics.json
           git commit -m "Actualitzar daily_metrics.json" || exit 0
