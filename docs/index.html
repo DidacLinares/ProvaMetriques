@@ -193,7 +193,10 @@
                 function createLineChart(containerId) {
                     const container = document.getElementById(containerId);
                     container.innerHTML = ''; 
-
+                    const previousChart = echarts.getInstanceByDom(container);
+                    if (previousChart) {
+                        previousChart.dispose();
+                    }
                     fetch('daily_metrics.json')
                         .then(response => response.json())
                         .then(data => {
