@@ -63,12 +63,14 @@
         <select id="metricSelector">
             <option value="commits">Commits</option>
             <option value="issues">Issues</option>
+            <option value="temporal">Commits diaris</option>
         </select>
     </div>
     
     <div class="gauge-container" id="gaugeContainer"></div>
     <div class="chart-wrapper">
         <div id="radarChart" class="chart-container"></div>
+        <div id="lineChart" class="chart-container" style="display: none;"></div>
     </div>
 
     <script>
@@ -77,6 +79,7 @@
             .then(data => {
                 const container = document.getElementById('gaugeContainer');
                 const radarContainer = document.getElementById('radarChart');
+                const lineContainer = document.getElementById('lineChart');
                 
                 function createGauges(containerId, dataObj, totalKey, type) {
                     const container = document.getElementById(containerId);
@@ -187,17 +190,76 @@
                     radarChart.setOption(radarOption);
                 }
 
-                function updateCharts(metric) {
-                    const dataObj = data[metric.charAt(0).toUpperCase() + metric.slice(1)];
-                    const title = metric.charAt(0).toUpperCase() + metric.slice(1) + ' per Usuari';
-                    const titleLink = document.getElementById('titleLink');
+                function createLineChart(containerId) {
+                    const container = document.getElementById(containerId);
+                    container.innerHTML = ''; 
 
-                    createGauges('gaugeContainer', dataObj, 'total', metric);
-                    createRadarChart('radarChart', dataObj, 'total', title);
-                    if (metric === 'commits') {
-                        titleLink.textContent = 'Commits';
-                    } else if (metric === 'issues') {
-                        titleLink.textContent = 'Issues';
+                    fetch('daily_metrics.json')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data || Object.keys(data).length === 0) {
+                                container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+                                return;
+                            }
+                            const dates = Object.keys(data);
+                            const commitsPerDate = dates.map(date => data[date].Commits.Total);
+
+                            const lineChart = echarts.init(container);
+                            const lineOption = {
+                                title: {
+                                    text: 'Commits per Dia',
+                                    left: 'center'
+                                },
+                                tooltip: {
+                                    trigger: 'axis'
+                                },
+                                xAxis: {
+                                    type: 'category',
+                                    data: dates
+                                },
+                                yAxis: {
+                                    type: 'value',
+                                    name: 'Commits'
+                                },
+                                series: [{
+                                    data: commitsPerDate,
+                                    type: 'line',
+                                    smooth: true,
+                                    itemStyle: { color: '#00aaff' }
+                                }]
+                            };
+                            lineChart.setOption(lineOption);
+                        })
+                        .catch(error => {
+                            console.error('Error al carregar daily_metrics.json:', error);
+                            container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+                        });
+                }
+
+                function updateCharts(metric) {
+                    if (metric === 'temporal') {
+                        document.getElementById('gaugeContainer').style.display = 'none';
+                        document.getElementById('radarChart').style.display = 'none';
+                        document.getElementById('lineChart').style.display = 'block';
+                        titleLink.textContent = 'Commits diaris';
+
+                        createLineChart('lineChart');
+                    } else {
+                        document.getElementById('gaugeContainer').style.display = 'flex';
+                        document.getElementById('radarChart').style.display = 'block';
+                        document.getElementById('lineChart').style.display = 'none';
+
+                        const dataObj = data[metric.charAt(0).toUpperCase() + metric.slice(1)];
+                        const title = metric.charAt(0).toUpperCase() + metric.slice(1) + ' per Usuari';
+
+                        createGauges('gaugeContainer', dataObj, 'total', metric);
+                        createRadarChart('radarChart', dataObj, 'total', title);
+                        const titleLink = document.getElementById('titleLink');
+                        if (metric === 'commits') {
+                            titleLink.textContent = 'Commits';
+                        } else if (metric === 'issues') {
+                            titleLink.textContent = 'Issues';
+                        }
                     }
                 }
 
