@@ -11,7 +11,7 @@ permissions:
   contents: write
   
 jobs:
-  count_commits:
+  count_commits_and_issues:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +21,7 @@ jobs:
       - name: Obtenir Commits dels usuaris
         id: get_contributors
         run: |
+          cd docs
           python metrics.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
