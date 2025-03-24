@@ -32,8 +32,8 @@ for contributor in contributors:
         commits_by_user[user] = commits
         total_commits += commits
 
-commits_data = {"Commits": commits_by_user}
-commits_data["Commits"]["Total"] = total_commits
+data = {"Commits": commits_by_user}
+data["Commits"]["Total"] = total_commits
 
 issues_url = f"{BASE_URL}/{REPO}/issues?state=all"
 response_issues = requests.get(issues_url, headers=HEADERS)
@@ -60,18 +60,18 @@ if response_issues.status_code == 200:
     issues_data = issues_by_user
     issues_data["Non-Assigned"] = non_assigned_issues
     issues_data["Total"] = total_issues
-    commits_data["Issues"] = issues_data
+    data["Issues"] = issues_data
 else:
     print(f"Error obtenint les issues: {response_issues.status_code}")
 
 json_file = "daily_metrics.json"
 if os.path.exists(json_file):
     with open(json_file, "r") as j:
-        data = json.load(j)
+        data_json = json.load(j)
 else:
-    data = {}
+    data_json = {}
 
-data[today] = commits_data
+data_json[today] = data
 
 with open(json_file, "w") as j:
-    json.dump(data, j, indent=4)
+    json.dump(data_json, j, indent=4)
