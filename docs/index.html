@@ -63,7 +63,7 @@
         <select id="metricSelector">
             <option value="commits">Commits</option>
             <option value="issues">Issues</option>
-            <option value="temporal">Commits diaris</option>
+            <option value="temporal">Commits acumulats</option>
         </select>
     </div>
     
@@ -210,7 +210,7 @@
                             const lineChart = echarts.init(container);
                             const lineOption = {
                                 title: {
-                                    text: 'Commits per Dia',
+                                    text: 'Commits acumulats per Dia',
                                     left: 'center'
                                 },
                                 tooltip: {
@@ -244,7 +244,7 @@
                         document.getElementById('gaugeContainer').style.display = 'none';
                         document.getElementById('radarChart').style.display = 'none';
                         document.getElementById('lineChart').style.display = 'block';
-                        titleLink.textContent = 'Commits diaris';
+                        titleLink.textContent = 'Commits acumulats';
 
                         createLineChart('lineChart');
                     } else {
