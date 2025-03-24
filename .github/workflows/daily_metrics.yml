@@ -14,7 +14,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+        with:
+          ref: gh-pages  
+
       - name: Obtenir Commits dels usuaris
         id: get_contributors
         run: |
@@ -23,12 +25,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+
       - name: Committing results
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin gh-pages
-          git checkout gh-pages
 
           git add docs/daily_metrics.json
           git commit -m "Actualitzar daily_metrics.json" || exit 0
