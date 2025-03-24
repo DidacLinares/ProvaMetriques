@@ -1,4 +1,30 @@
 {
+    "2025-03-20": {
+        "Commits": {
+            "DidacLinares": 19,
+            "didaclinaresUPC": 7,
+            "Total": 26
+        },
+        "Issues": {
+            "DidacLinares": 3,
+            "didaclinaresUPC": 1,
+            "Non-Assigned": 2,
+            "Total": 6
+        }
+    },
+    "2025-03-21": {
+        "Commits": {
+            "DidacLinares": 30,
+            "didaclinaresUPC": 10,
+            "Total": 40
+        },
+        "Issues": {
+            "DidacLinares": 3,
+            "didaclinaresUPC": 1,
+            "Non-Assigned": 2,
+            "Total": 6
+        }
+    },
     "2025-03-22": {
         "Commits": {
             "DidacLinares": 37,
