@@ -7,7 +7,8 @@ REPO = os.getenv("GITHUB_REPOSITORY")
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    'Cache-Control': 'no-cache'
 }
 BASE_URL = "https://api.github.com/repos"
 
@@ -25,9 +26,9 @@ total_commits = 0
 for contributor in contributors:
     user = contributor["login"]
     commits = contributor["contributions"]
-    #if user != "github-actions[bot]":
-    commits_by_user[user] = commits
-    total_commits += commits
+    if user != "github-actions[bot]":
+        commits_by_user[user] = commits
+        total_commits += commits
 
 commits_data = {"Commits": commits_by_user}
 commits_data["Commits"]["Total"] = total_commits
