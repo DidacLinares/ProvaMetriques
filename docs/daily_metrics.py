@@ -6,7 +6,8 @@ import datetime
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 REPO = os.getenv("GITHUB_REPOSITORY")
-today = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+today = (datetime.date.today() - datetime.timedelta(days=1))
+today = today.strftime('%d-%m-%Y')
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",

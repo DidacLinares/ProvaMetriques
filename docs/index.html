@@ -74,7 +74,7 @@
     </div>
 
     <script>
-        fetch('metrics.json')
+        fetch('metrics.json?timestamp=' + new Date().getTime())
             .then(response => response.json())
             .then(data => {
                 const container = document.getElementById('gaugeContainer');
@@ -190,54 +190,64 @@
                     radarChart.setOption(radarOption);
                 }
 
-                function createLineChart(containerId) {
-                    const container = document.getElementById(containerId);
-                    container.innerHTML = ''; 
-                    const previousChart = echarts.getInstanceByDom(container);
-                    if (previousChart) {
-                        previousChart.dispose();
-                    }
-                    fetch('daily_metrics.json')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data || Object.keys(data).length === 0) {
-                                container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
-                                return;
-                            }
-                            const dates = Object.keys(data);
-                            const commitsPerDate = dates.map(date => data[date].Commits.Total);
+function createLineChart(containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const previousChart = echarts.getInstanceByDom(container);
+    if (previousChart) {
+        previousChart.dispose();
+    }
+    fetch('daily_metrics.json?timestamp=' + new Date().getTime())
+        .then(response => response.json())
+        .then(data => {
+            if (!data || Object.keys(data).length === 0) {
+                container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+                return;
+            }
+            const dates = Object.keys(data);
+            const commitsPerDate = dates.map(date => data[date].Commits.Total);
 
-                            const lineChart = echarts.init(container);
-                            const lineOption = {
-                                title: {
-                                    text: 'Commits acumulats per Dia',
-                                    left: 'center'
-                                },
-                                tooltip: {
-                                    trigger: 'axis'
-                                },
-                                xAxis: {
-                                    type: 'category',
-                                    data: dates
-                                },
-                                yAxis: {
-                                    type: 'value',
-                                    name: 'Commits'
-                                },
-                                series: [{
-                                    data: commitsPerDate,
-                                    type: 'line',
-                                    smooth: true,
-                                    itemStyle: { color: '#00aaff' }
-                                }]
-                            };
-                            lineChart.setOption(lineOption);
-                        })
-                        .catch(error => {
-                            console.error('Error al carregar daily_metrics.json:', error);
-                            container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
-                        });
-                }
+            const lineChart = echarts.init(container);
+            const lineOption = {
+                title: {
+                    text: 'Commits acumulats per Dia',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: {
+                        rotate: 45,
+                        textStyle: {
+                            fontSize: 12  
+                        }
+                    },
+                    axisTick: {
+                        alignWithLabel: true,
+                    },
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Commits'
+                },
+                series: [{
+                    data: commitsPerDate,
+                    type: 'line',
+                    smooth: true,
+                    itemStyle: { color: '#00aaff' }
+                }]
+            };
+            lineChart.setOption(lineOption);
+        })
+        .catch(error => {
+            console.error('Error al carregar daily_metrics.json:', error);
+            container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+        });
+}
+
 
                 function updateCharts(metric) {
                     if (metric === 'temporal') {
