@@ -7,7 +7,8 @@ REPO = os.getenv("GITHUB_REPOSITORY")
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    'Cache-Control': 'no-cache'
 }
 BASE_URL = "https://api.github.com/repos"
 
