@@ -25,9 +25,9 @@ total_commits = 0
 for contributor in contributors:
     user = contributor["login"]
     commits = contributor["contributions"]
-    #if user != "github-actions[bot]":
-    commits_by_user[user] = commits
-    total_commits += commits
+    if user != "github-actions[bot]":
+        commits_by_user[user] = commits
+        total_commits += commits
 
 commits_data = {"Commits": commits_by_user}
 commits_data["Commits"]["Total"] = total_commits
