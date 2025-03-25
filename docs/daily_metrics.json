@@ -50,5 +50,18 @@
             "Non-Assigned": 2,
             "Total": 6
         }
+    },
+    "2025-03-24": {
+        "Commits": {
+            "DidacLinares": 50,
+            "didaclinaresUPC": 12,
+            "Total": 62
+        },
+        "Issues": {
+            "DidacLinares": 3,
+            "didaclinaresUPC": 1,
+            "Non-Assigned": 2,
+            "Total": 6
+        }
     }
 }
