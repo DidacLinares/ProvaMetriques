@@ -86,7 +86,7 @@
                     const users = Object.entries(dataObj).filter(([user]) => user.toLowerCase() !== totalKey);
                     const total = users.reduce((sum, [, value]) => sum + value, 0);
                     const labels = type === "commits" 
-                        ? { 0: "0", 0.2: "0.2", 0.4: "0.4", 1: "1" } 
+                        ? { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" } 
                         : { 0: "0", 0.4: "0.4", 0.6: "0.6", 1: "1" };
 
                     container.innerHTML = '';
@@ -106,9 +106,9 @@
                         const isNonAssigned = user.toLowerCase() === 'non-assigned';
                         let gaugeColor;
                         if (type === "commits") {
-                            gaugeColor = [[0.1, 'red'],[0.2, 'orange'], [0.4, 'green'], [0.5, 'orange'], [1, 'red']];
+                            gaugeColor = [[0.3, 'red'], [0.4, 'orange'], [0.6, 'green'], [0.7, 'orange'], [1, 'red']];
                         } else {
-                            gaugeColor = isNonAssigned ? [[0, 'red'], [1, 'red']] : [[0.2, 'red'], [0.4, 'orange'], [0.6, 'green'], [0.8, 'orange'], [1, 'red']];
+                            gaugeColor = isNonAssigned ? [[0, 'red'], [1, 'red']] : [[0.3, 'red'], [0.4, 'orange'], [0.6, 'green'], [0.7, 'orange'], [1, 'red']];
                         };
                         const chart = echarts.init(gaugeDiv);
                         const option = {
