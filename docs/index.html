@@ -190,64 +190,71 @@
                     radarChart.setOption(radarOption);
                 }
 
-function createLineChart(containerId) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    const previousChart = echarts.getInstanceByDom(container);
-    if (previousChart) {
-        previousChart.dispose();
-    }
-    fetch('daily_metrics.json?timestamp=' + new Date().getTime())
-        .then(response => response.json())
-        .then(data => {
-            if (!data || Object.keys(data).length === 0) {
-                container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
-                return;
-            }
-            const dates = Object.keys(data);
-            const commitsPerDate = dates.map(date => data[date].Commits.Total);
+                function createLineChart(containerId) { 
+                    const container = document.getElementById(containerId);
+                    container.innerHTML = ''; 
+                    const previousChart = echarts.getInstanceByDom(container);
+                    if (previousChart) {
+                        previousChart.dispose();
+                    }
 
-            const lineChart = echarts.init(container);
-            const lineOption = {
-                title: {
-                    text: 'Commits acumulats per Dia',
-                    left: 'center'
-                },
-                tooltip: {
-                    trigger: 'axis'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dates,
-                    axisLabel: {
-                        rotate: 45,
-                        textStyle: {
-                            fontSize: 12  
-                        }
-                    },
-                    axisTick: {
-                        alignWithLabel: true,
-                    },
-                },
-                yAxis: {
-                    type: 'value',
-                    name: 'Commits'
-                },
-                series: [{
-                    data: commitsPerDate,
-                    type: 'line',
-                    smooth: true,
-                    itemStyle: { color: '#00aaff' }
-                }]
-            };
-            lineChart.setOption(lineOption);
-        })
-        .catch(error => {
-            console.error('Error al carregar daily_metrics.json:', error);
-            container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
-        });
-}
+                    fetch('daily_metrics.json?timestamp=' + new Date().getTime())
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data || Object.keys(data).length === 0) {
+                                container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+                                return;
+                            }
+                            const dates = Object.keys(data);
+                            const commitsPerDate = dates.map(date => data[date].Commits.Total);
 
+                            const lineChart = echarts.init(container);
+                            const lineOption = {
+                                title: {
+                                    text: 'Commits acumulats per Dia',
+                                    left: 'center'
+                                },
+                                tooltip: {
+                                    trigger: 'axis',
+                                    formatter: function (params) {
+                                        const date = params[0].name;
+                                        const commits = params[0].value;  
+                                        return `${date}<br/> ${params[0].marker}  Commits: ${commits}`;
+                                    }
+                                },
+                                xAxis: {
+                                    type: 'category',
+                                    data: dates,
+                                    name: 'Dia',
+                                    axisLabel: {
+                                        rotate: 45,  
+                                        textStyle: {
+                                            fontSize: 12  
+                                        }
+                                    },
+                                    axisTick: {
+                                    alignWithLabel: true,
+                                    },
+                                },
+                                
+                                yAxis: {
+                                    type: 'value',
+                                    name: 'Commits'
+                                },
+                                series: [{
+                                    data: commitsPerDate,
+                                    type: 'line',
+                                    smooth: true,
+                                    itemStyle: { color: '#00aaff' }
+                                }]
+                            };
+                            lineChart.setOption(lineOption);
+                        })
+                        .catch(error => {
+                            console.error('Error al carregar daily_metrics.json:', error);
+                            container.innerHTML = '<p style="font-size: 20px; font-weight: bold; text-align: center;">No hi ha dades</p>';
+                        });
+                }
 
                 function updateCharts(metric) {
                     if (metric === 'temporal') {
